@@ -35,20 +35,43 @@ API Calls
 */
 
 const fetchWeather = async (cityName: string) => {
-  const response = await fetch('/api/weather/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ cityName }),
-  });
+  try {
+    const response = await fetch('/api/weather/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ city: cityName }),
+    });
 
-  const weatherData = await response.json();
+    // Process response
+    const weatherData = await response.json();
+    console.log('weatherData: ', weatherData);
 
-  console.log('weatherData: ', weatherData);
+    if (!response.ok) {
+      console.error('Error from server:', weatherData.error || 'Unknown error');
+      return;
+    }
 
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData.slice(1));
+    // Check the structure of the response and extract data accordingly
+    if (weatherData && weatherData.current) {
+      // Pass city name separately to the currentWeather object
+      const currentWithCity = { 
+        ...weatherData.current, 
+        city: weatherData.city 
+      };
+      
+      renderCurrentWeather(currentWithCity);
+      
+      if (weatherData.forecast && Array.isArray(weatherData.forecast)) {
+        renderForecast(weatherData.forecast);
+      }
+    } else {
+      console.error('Unexpected weather data format:', weatherData);
+    }
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 };
 
 const fetchSearchHistory = async () => {
@@ -77,11 +100,20 @@ Render Functions
 */
 
 const renderCurrentWeather = (currentWeather: any): void => {
-  const { city, date, icon, iconDescription, tempF, windSpeed, humidity } =
-    currentWeather;
+  // Make sure currentWeather exists
+  if (!currentWeather) {
+    console.error('Current weather data is undefined');
+    return;
+  }
+
+  // Extract properties from the Weather object
+  const { city, date, temp: tempF, humidity, windSpeed, description: iconDescription, icon } = currentWeather;
+  
+  // Use city from object or default to Unknown City
+  const cityName = city || 'Unknown City';
 
   // convert the following to typescript
-  heading.textContent = `${city} (${date})`;
+  heading.textContent = `${cityName} (${date})`;
   weatherIcon.setAttribute(
     'src',
     `https://openweathermap.org/img/w/${icon}.png`
@@ -118,7 +150,8 @@ const renderForecast = (forecast: any): void => {
 };
 
 const renderForecastCard = (forecast: any) => {
-  const { date, icon, iconDescription, tempF, windSpeed, humidity } = forecast;
+  // Extract properties from the Weather object with proper naming
+  const { date, icon, description: iconDescription, temp: tempF, windSpeed, humidity } = forecast;
 
   const { col, cardTitle, weatherIcon, tempEl, windEl, humidityEl } =
     createForecastCard();
@@ -130,7 +163,7 @@ const renderForecastCard = (forecast: any) => {
     `https://openweathermap.org/img/w/${icon}.png`
   );
   weatherIcon.setAttribute('alt', iconDescription);
-  tempEl.textContent = `Temp: ${tempF} °F`;
+  tempEl.textContent = `Temp: ${tempF}°F`;
   windEl.textContent = `Wind: ${windSpeed} MPH`;
   humidityEl.textContent = `Humidity: ${humidity} %`;
 
