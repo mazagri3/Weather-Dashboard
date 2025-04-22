@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fetch, { Response } from 'node-fetch';
+import fetch from 'node-fetch';
+import type { Response } from 'node-fetch';
+import type { WeatherResponse, ForecastResponse } from './types/weather';
 
 // Initialize environment variables
 dotenv.config();
@@ -12,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
@@ -41,7 +43,7 @@ app.get('/api/weather', async (req, res) => {
         console.log('API URL:', apiUrl);
 
         const response: Response = await fetch(apiUrl);
-        const data = await response.json();
+        const data = await response.json() as WeatherResponse;
 
         console.log('Response status:', response.status);
         console.log('Weather data:', JSON.stringify(data, null, 2));
@@ -87,7 +89,7 @@ app.get('/api/forecast', async (req, res) => {
         console.log('API URL:', apiUrl);
 
         const response: Response = await fetch(apiUrl);
-        const data = await response.json();
+        const data = await response.json() as ForecastResponse;
 
         console.log('Response status:', response.status);
         console.log('Forecast data:', JSON.stringify(data, null, 2));
@@ -128,7 +130,7 @@ app.get('*', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log('\x1b[36m%s\x1b[0m', `Server is running at http://localhost:${PORT}`);
     console.log(`OpenWeather API Key: ${process.env.API_KEY ? 'Configured' : 'Not configured'}`);
     console.log(`API Base URL: ${process.env.API_BASE_URL}`);
 });
