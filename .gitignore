@@ -1,7 +1,38 @@
-# Node.js
+# Dependencies
 node_modules/
 npm-debug.log
+yarn-debug.log
 yarn-error.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
 
 # Python
 __pycache__/
@@ -9,8 +40,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.egg-info/
-dist/
-build/
 
 # Java
 *.class
@@ -19,22 +48,11 @@ build/
 *.ear
 target/
 
-# macOS
-.DS_Store
-
 # Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# IDEs
-.idea/
-.vscode/
+# Sublime files
 *.sublime-project
 *.sublime-workspace
-
-# Logs
-*.log
-
-# Environment variables
-.env
