@@ -8,6 +8,8 @@ const searchInput = document.getElementById('search-input');
 const historyList = document.getElementById('history');
 const todaySection = document.getElementById('today');
 const forecastSection = document.getElementById('forecast');
+const forecastContainer = document.querySelector('.forecast-container');
+const weatherEmoji = document.querySelector('.weather-emoji');
 
 // State
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
@@ -22,6 +24,11 @@ async function handleSearch(event) {
     if (!city) return;
 
     try {
+        // Show loading state
+        document.getElementById('search-title').innerHTML = 'Loading...';
+        weatherEmoji.textContent = '⏳';
+        forecastContainer.innerHTML = '';
+
         // Fetch current weather
         const currentWeatherData = await fetchWeatherData(city);
         displayCurrentWeather(currentWeatherData);
@@ -34,20 +41,36 @@ async function handleSearch(event) {
         updateSearchHistory(city);
     } catch (error) {
         console.error('Error fetching weather data:', error);
-        alert('Error fetching weather data. Please try again.');
+        document.getElementById('search-title').innerHTML = 'Error loading weather data';
+        weatherEmoji.textContent = '❌';
+        forecastContainer.innerHTML = `
+            <div class="alert alert-danger" role="alert">
+                ${error.message || 'Failed to fetch weather data. Please try again.'}
+            </div>
+        `;
     }
 }
 
 async function fetchWeatherData(city) {
     const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
-    if (!response.ok) throw new Error('Failed to fetch weather data');
-    return await response.json();
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to fetch weather data');
+    }
+    
+    return data;
 }
 
 async function fetchForecastData(city) {
     const response = await fetch(`/api/forecast?city=${encodeURIComponent(city)}`);
-    if (!response.ok) throw new Error('Failed to fetch forecast data');
-    return await response.json();
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to fetch forecast data');
+    }
+    
+    return data;
 }
 
 function displayCurrentWeather(data) {
@@ -64,7 +87,7 @@ function displayCurrentWeather(data) {
 }
 
 function displayForecast(data) {
-    forecastSection.innerHTML = '';
+    forecastContainer.innerHTML = '';
     // Get every 8th item (24-hour intervals) for 5-day forecast
     const dailyForecasts = data.list.filter((_, index) => index % 8 === 0).slice(0, 5);
 
@@ -81,7 +104,7 @@ function displayForecast(data) {
             <p>Wind: ${day.wind.speed} MPH</p>
             <p>Humidity: ${day.main.humidity}%</p>
         `;
-        forecastSection.appendChild(card);
+        forecastContainer.appendChild(card);
     });
 }
 
@@ -97,15 +120,36 @@ function updateSearchHistory(city) {
 function displaySearchHistory() {
     historyList.innerHTML = '';
     searchHistory.forEach(city => {
-        const item = document.createElement('button');
-        item.className = 'list-group-item history-item';
-        item.textContent = city;
-        item.addEventListener('click', () => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item history-item d-flex justify-content-between align-items-center';
+        
+        const cityButton = document.createElement('button');
+        cityButton.className = 'btn btn-link text-start flex-grow-1';
+        cityButton.textContent = city;
+        cityButton.addEventListener('click', () => {
             searchInput.value = city;
             handleSearch(new Event('submit'));
         });
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger btn-sm';
+        deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+        deleteButton.setAttribute('aria-label', `Delete ${city} from history`);
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the city button click
+            deleteFromHistory(city);
+        });
+
+        item.appendChild(cityButton);
+        item.appendChild(deleteButton);
         historyList.appendChild(item);
     });
+}
+
+function deleteFromHistory(city) {
+    searchHistory = searchHistory.filter(item => item !== city);
+    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    displaySearchHistory();
 }
 
 // Initialize

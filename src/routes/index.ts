@@ -1,8 +1,8 @@
 import { Router } from 'express';
 const router = Router();
 
-import apiRoutes from './api/index.ts';
-import htmlRoutes from './htmlRoutes.ts';
+import apiRoutes from './api/index';
+import htmlRoutes from './htmlRoutes';
 
 router.use('/api', apiRoutes);
 router.use('/', htmlRoutes);
