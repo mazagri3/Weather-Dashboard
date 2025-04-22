@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -133,4 +133,7 @@ app.listen(PORT, () => {
     console.log('\x1b[36m%s\x1b[0m', `Server is running at http://localhost:${PORT}`);
     console.log(`OpenWeather API Key: ${process.env.API_KEY ? 'Configured' : 'Not configured'}`);
     console.log(`API Base URL: ${process.env.API_BASE_URL}`);
+}).on('error', (err) => {
+    console.error('Server failed to start:', err);
+    process.exit(1);
 });
